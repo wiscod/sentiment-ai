@@ -1,7 +1,9 @@
+import os
 from fastapi import FastAPI
 from src.schemas import PredictionRequest, PredictionResponse
 from src.model import SentimentModel
 
+# Application FastAPI (Modification pour test automatique Jenkins)
 app = FastAPI(title="SentimentAI", version="0.1.0")
 
 # Le modèle est chargé une seule fois au démarrage du serveur
