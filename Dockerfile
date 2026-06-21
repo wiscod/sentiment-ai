@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+LABEL org.opencontainers.image.source="https://github.com/wiscod/sentiment-ai"
+
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
