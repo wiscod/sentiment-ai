@@ -54,7 +54,12 @@ pipeline {
         }
 
         stage('Push') {
-            when { branch 'main' }
+            when { 
+                anyOf {
+                    branch 'main'
+                    expression { env.GIT_BRANCH == 'origin/main' }
+                }
+            }
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'github-token',
