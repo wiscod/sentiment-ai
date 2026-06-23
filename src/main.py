@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from src.schemas import PredictionRequest, PredictionResponse
 from src.model import SentimentModel
 
-# Application FastAPI (Test du déclenchement instantané par Webhook)
+# Application FastAPI (Preuve ultime que le Webhook fonctionne !)
 app = FastAPI(title="SentimentAI", version="0.1.0")
 
 # Le modèle est chargé une seule fois au démarrage du serveur
