@@ -128,9 +128,11 @@ pipeline {
                   --volumes-from jenkins \\
                   -w "$WORKSPACE" \\
                   -v /var/run/docker.sock:/var/run/docker.sock \\
+                  -v /var/jenkins_home/trivy-cache:/root/.cache/ \\
                   aquasec/trivy:latest image \\
                   --severity HIGH,CRITICAL \\
                   --ignore-unfixed \\
+                  --timeout 15m \\
                   --exit-code 1 \\
                   ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
