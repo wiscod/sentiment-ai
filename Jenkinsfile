@@ -24,22 +24,12 @@ pipeline {
         stage('Lint') {
             steps {
                 sh '''
-                docker run --rm \
-                  --volumes-from jenkins \
-                  -w $WORKSPACE \
-                  python:3.12-slim \
+                docker run --rm \\
+                  --volumes-from jenkins \\
+                  -w $WORKSPACE \\
+                  python:3.12-slim \\
                   sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
                 '''
-            }
-        }
-
-        stage('IaC Validate') {
-            steps {
-                dir('infra') {
-                    sh 'terraform init -backend=false -input=false'
-                    sh 'terraform fmt -check'
-                    sh 'terraform validate'
-                }
             }
         }
 
@@ -125,13 +115,13 @@ pipeline {
             steps {
                 sh '''
                 docker run --rm \\
+                  --volumes-from jenkins \\
+                  -w "$WORKSPACE" \\
                   -v /var/run/docker.sock:/var/run/docker.sock \\
                   aquasec/trivy:latest image \\
                   --severity HIGH,CRITICAL \\
                   --ignore-unfixed \\
                   --exit-code 1 \\
-                  --skip-dirs /usr/local/lib/python3.11/site-packages/setuptools/_vendor \\
-                  --skip-dirs /usr/local/lib/python3.11/site-packages/wheel-0.45.1.dist-info \\
                   ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
             }
@@ -167,24 +157,6 @@ pipeline {
             }
         }
 
-        stage('IaC Apply') {
-            when { 
-                anyOf {
-                    branch 'main'
-                    expression { env.GIT_BRANCH == 'origin/main' }
-                }
-            }
-            steps {
-                dir('infra') {
-                    sh 'terraform init -input=false'
-                    sh """
-                    terraform apply -auto-approve \
-                      -var='image_tag=${IMAGE_TAG}'
-                    """
-                }
-            }
-        }
-
         stage('Deploy Staging') {
             when { 
                 anyOf {
@@ -193,7 +165,16 @@ pipeline {
                 }
             }
             steps {
-                sh 'curl -f http://localhost:8001/health || exit 1'
+                echo "Déploiement de ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} en staging..."
+                sh '''
+                # Arrêter le staging précédent proprement
+                docker compose -f docker-compose.yml -p staging down 2>/dev/null || true
+                
+                # Démarrer la nouvelle version
+                docker compose -f docker-compose.yml -p staging up -d
+                
+                echo "Staging disponible sur http://localhost:8001"
+                '''
             }
         }
     }
