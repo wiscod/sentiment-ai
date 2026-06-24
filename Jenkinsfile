@@ -24,12 +24,22 @@ pipeline {
         stage('Lint') {
             steps {
                 sh '''
-                docker run --rm \\
-                  --volumes-from jenkins \\
-                  -w $WORKSPACE \\
-                  python:3.12-slim \\
+                docker run --rm \
+                  --volumes-from jenkins \
+                  -w $WORKSPACE \
+                  python:3.12-slim \
                   sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
                 '''
+            }
+        }
+
+        stage('IaC Validate') {
+            steps {
+                dir('infra') {
+                    sh 'terraform init -backend=false -input=false'
+                    sh 'terraform fmt -check'
+                    sh 'terraform validate'
+                }
             }
         }
 
@@ -157,6 +167,24 @@ pipeline {
             }
         }
 
+        stage('IaC Apply') {
+            when { 
+                anyOf {
+                    branch 'main'
+                    expression { env.GIT_BRANCH == 'origin/main' }
+                }
+            }
+            steps {
+                dir('infra') {
+                    sh 'terraform init -input=false'
+                    sh """
+                    terraform apply -auto-approve \
+                      -var='image_tag=${IMAGE_TAG}'
+                    """
+                }
+            }
+        }
+
         stage('Deploy Staging') {
             when { 
                 anyOf {
@@ -165,16 +193,7 @@ pipeline {
                 }
             }
             steps {
-                echo "Déploiement de ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} en staging..."
-                sh '''
-                # Arrêter le staging précédent proprement
-                docker compose -f docker-compose.yml -p staging down 2>/dev/null || true
-                
-                # Démarrer la nouvelle version
-                docker compose -f docker-compose.yml -p staging up -d
-                
-                echo "Staging disponible sur http://localhost:8001"
-                '''
+                sh 'curl -f http://localhost:8001/health || exit 1'
             }
         }
     }
