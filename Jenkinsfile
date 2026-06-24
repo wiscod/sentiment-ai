@@ -59,6 +59,9 @@ pipeline {
                 docker cp test-runner:/tmp/coverage.xml ./coverage.xml 2>/dev/null || true
                 docker rm -f test-runner 2>/dev/null || true
                 
+                # Adapter le chemin /app du conteneur pour SonarScanner
+                sed -i "s|/app|$WORKSPACE|g" coverage.xml || true
+                
                 # Retourner le code de sortie des tests
                 exit $TEST_EXIT_CODE
                 '''
