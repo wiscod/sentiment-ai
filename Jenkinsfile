@@ -200,7 +200,12 @@ pipeline {
         }
 
         stage('Smoke Test') {
-            when { branch 'main' }
+            when { 
+                anyOf {
+                    branch 'main'
+                    expression { env.GIT_BRANCH == 'origin/main' }
+                }
+            }
             steps {
                 sh '''
                 echo "Attente démarrage (10s)..."
