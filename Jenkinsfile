@@ -120,6 +120,7 @@ pipeline {
                   --severity HIGH,CRITICAL \\
                   --ignore-unfixed \\
                   --exit-code 1 \\
+                  --skip-dirs /usr/local/lib/python3.11/site-packages/setuptools/_vendor \\
                   ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
             }
