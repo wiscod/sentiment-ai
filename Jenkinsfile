@@ -121,6 +121,7 @@ pipeline {
                   --ignore-unfixed \\
                   --exit-code 1 \\
                   --skip-dirs /usr/local/lib/python3.11/site-packages/setuptools/_vendor \\
+                  --skip-dirs /usr/local/lib/python3.11/site-packages/wheel-0.45.1.dist-info \\
                   ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
             }
