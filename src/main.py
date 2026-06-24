@@ -12,7 +12,7 @@ model = SentimentModel()
 predictions_total = Counter(
     "sentiment_predictions_total",
     "Nombre total de prédictions",
-    ["label", "status"] # ex: label=POSITIVE, status=ok
+    ["label", "status"]  # ex: label=POSITIVE, status=ok
 )
 
 confidence_gauge = Gauge(
@@ -30,9 +30,11 @@ prediction_duration = Histogram(
 # Instrumentation automatique HTTP (expose GET /metrics)
 Instrumentator().instrument(app).expose(app)
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(request: PredictionRequest):
@@ -40,11 +42,11 @@ def predict(request: PredictionRequest):
     try:
         result = model.predict(request.text)
         duration = time.time() - start
-        
+
         predictions_total.labels(label=result["label"], status="ok").inc()
         confidence_gauge.labels(label=result["label"]).set(result["score"])
         prediction_duration.observe(duration)
-        
+
         return result
     except Exception:
         predictions_total.labels(label="UNKNOWN", status="error").inc()
