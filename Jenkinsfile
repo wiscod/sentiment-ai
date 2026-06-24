@@ -214,7 +214,6 @@ pipeline {
                 # 1. L'app répond
                 curl -f http://sentiment-staging:8000/health || exit 1
                 echo "/health OK"
-                
                 # 2. Les métriques sont exposées
                 curl -s http://sentiment-staging:8000/metrics | \\
                   grep -q sentiment_predictions_total || exit 1
@@ -222,8 +221,8 @@ pipeline {
                 
                 # 3. Prometheus scrape l'app
                 sleep 20  # attendre au moins 1 scrape (15s)
-                curl -s "http://prometheus:9090/api/v1/query?query=up{job='sentiment-ai'}" | \\
-                  grep -q '"value":.*1' || exit 1
+                curl -sg "http://prometheus:9090/api/v1/query?query=up{job='sentiment-ai'}" | \\
+                  grep -q '"value":.*1' || (curl -sg "http://prometheus:9090/api/v1/query?query=up{job='sentiment-ai'}" && exit 1)
                 echo "Prometheus scrape sentiment-ai : UP"
                 
                 # 4. Grafana répond
